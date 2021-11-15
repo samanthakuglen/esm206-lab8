@@ -145,3 +145,5 @@ homes_predicted <- augment(homes_lm1)
 ```
 
 Use the `predict()` function to try out your model on new scenarios that you create. 
+
+# MY UPDATE ! ! ! !
