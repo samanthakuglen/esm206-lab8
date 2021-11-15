@@ -1,0 +1,69 @@
+---
+title: "Lab 8"
+author: "Samantha Kuglen"
+date: "11/15/2021"
+output: html_document
+---
+
+```{r setup, include=TRUE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# Attach packages
+library(tidyverse)
+library(corrplot)
+library(stargazer)
+library(broom)
+library(modelsummary)
+library(here)
+```
+
+## Read in data
+```{r}
+homes <- read_csv(here("data", "slo_homes.csv"))
+
+#unique(homes$City) in console to get unique city names
+```
+
+A little bit of cleaning:
+
+Make a subset called homes_sub that only contains observations (rows) where the city is:
+
+- San Luis Obispo
+- Arroyo Grande
+- Atascadero
+- Santa Maria-Orcutt
+
+```{r}
+homes_sub <- homes %>% 
+  filter(City %in% c("San Luis Obispo", "Arroyo Grande", "Atascadero", "Santa Maria-Orcutt"))
+```
+
+## Do a little exploring of our data
+
+Summary statistics (home price, based on city and sale status)
+- Find & return in a nice summary table the mean and standard deviation of home price, grouped by city and sale status
+```{r}
+homes_sub  %>% 
+  group_by(City, Status) %>% 
+  summarize(mean_price = round(mean(Price, na.rm = TRUE), 1),
+            sd_price = round(sd(Price,na.rm = TRUE), 1))
+
+# If you don't want to run this code at all: set eval = FALSE, code not evaluated
+# if not referring to a variable, outside of aes
+# higher density of homes sold towards lower prices at Santa Maria 
+ggplot(data = homes_sub, aes(x = Price)) +
+  geom_density(aes(color = City, fill = City), alpha = 0.3) + 
+  scale_x_continuous(limits = c(0, 3e6))
+```
+
+
+Explore the relationship (visual data exploration) between square footage and home price. Change the point COLOR by City and Point shape by sale status
+```{r}
+ggplot(homes_sub, aes(x = SqFt, y = Price)) + 
+  geom_point(aes(color = City, shape = Status)) +
+  geom_smooth(method = "lm") +
+  theme_linedraw()
+  
+```
+
+
