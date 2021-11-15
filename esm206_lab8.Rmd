@@ -65,5 +65,83 @@ ggplot(homes_sub, aes(x = SqFt, y = Price)) +
   theme_linedraw()
   
 ```
+## Model the relationship with home price as DV
+```{r}
+# price per square foot and square foot redundant
+# bed and bath correlated... square foot too... correlation about size of the house
+homes_lm1 <- lm(Price ~ City + Bedrooms + Bathrooms + SqFt + PricePerSqFt + Status, data = homes_sub)
 
+# Make a subset that only contains the quantitative variables, price, bed, bath, sqft
+homes_quant <- homes_sub %>% 
+  select(Price:PricePerSqFt)
 
+homes_cor <- cor(homes_quant)
+homes_cor
+
+corrplot(homes_cor, method = 'ellipse')
+
+# Interpretting varibales, reference level is City of Arroyo Grande, for 
+# On average, Atascadero, house costs $9068 less than house in Arroyo Grande
+# - $30792, for every additional bedroom, price decreases for each 1 additional bedroom that exists in the house
+# Status: reference level is foreclosure, on average, regular sale has lower prices than those in foreclosure
+# These don't make sense, redudant in model so reexamine model
+
+# How would I explore diagnostic plots?
+plot(homes_lm1)
+
+```
+
+Try another model where we simplify based on concerns:
+- City 
+- SqFt
+- Status
+```{r}
+homes_lm2 <- lm(Price ~ City + SqFt + Status, data = homes_sub)
+
+homes_lm2
+
+plot(homes_lm2)
+#use summary(homes_lm2) in the console to view coefficients
+
+# these values more align with what you would expect for home prices, status regular price vs foreclosure price
+# R^2 84% of the variance in home price is explained by the predictor variables in this model (city, sqft, status, pricepersqft, bedroom, bathroom)... other variables need to capture 100% of variance in price, 
+# "adjusted" accounts for increased variables
+
+# ideal model: has high fit and is simple... use AIC
+```
+
+Find the AIC value of each model, lower = better balance between model fit and complexity:
+```{r}
+AIC(homes_lm1)
+AIC(homes_lm2)
+```
+
+Try another permutation of this model that might make sense, check out & compare model fit, outputs, and AIC value
+```{r}
+homes_lm3 <- lm(Price ~ City + SqFt + Status + Bedrooms, data = homes_sub)
+
+plot(homes_lm3)
+summary(homes_lm3)
+AIC(homes_lm3)
+```
+
+Use `modelsummary` to show model outputs side-by-side:
+
+If you use modelsummary to return model outputs of multiple models, it wants you to feed it to it as a list.
+
+```{r}
+# comparison in table of models
+# models 2 and 3 have lower R...capture less of the variance in price but not necessarily bad
+# examine each variable to see what makes the most sense to describe what's going on
+# in () in table... std error for each of the coefficients
+modelsummary(list(homes_lm1, homes_lm2, homes_lm3))
+```
+
+## Start making predictions with this model
+```{r}
+#Use `broom::augment()`
+
+homes_predicted <- augment(homes_lm1)
+```
+
+Use the `predict()` function to try out your model on new scenarios that you create. 
